@@ -14,10 +14,12 @@ Overview
 * Title : Arduino Project , Voltage and current meter based on MAX471 sensor 
 * Description : 
 
-1. Current reading  range  0-3 A 
-2. Voltage reading  range 3-25 V
-3. ATmega328 battery internal reference voltage used for analog measurements
-4. Output to LCD and  serial monitor
+1. An Arduino Nano uses a MAX471 current and voltage sensor to measure a Load
+and displays output to an ERM19264  UC1609 LCD
+2. Current reading  range  0-3 A 
+3. Voltage reading  range 3-25 V
+4. ATmega328 battery internal reference voltage used for analog measurements
+5. Output to LCD and  serial monitor
 
 * Author: Gavin Lyons
 * Arduino IDE: 1.8.16
@@ -26,7 +28,7 @@ Overview
 Libraries
 ------------------------
 
-Libraries used both from Author.
+Libraries used , both written by Author and on github.
 
 1. [MAX471](https://github.com/gavinlyonsrepo/MAX471)
 2. [ERM19264_UC1609]( https://github.com/gavinlyonsrepo/ERM19264_UC1609)
@@ -44,4 +46,4 @@ Output
 Schematic
 -------------------------------
 
-![s](https://github.com/gavinlyonsrepo/MAX471_PVI_METER/blob/main/extras/image/sch.jpg)
+![s](https://github.com/gavinlyonsrepo/MAX471_PVI_METER/blob/main/extras/image/sch.png)
