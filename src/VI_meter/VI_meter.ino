@@ -8,8 +8,12 @@
 */
 
 //******************** LIBRARIES ******************
-#include "MAX471.h"   //https://github.com/gavinlyonsrepo/MAX471
-#include "ERM19264_UC1609.h" // https://github.com/gavinlyonsrepo/ERM19264_UC1609
+//https://github.com/gavinlyonsrepo/MAX471
+#include "MAX471.h"
+
+// https://github.com/gavinlyonsrepo/ERM19264_UC1609
+// Fonts 1-3 must be enabled
+#include "ERM19264_UC1609.h"
 
 //******************** GLOBALS + DEFINES********************
 // Max471
@@ -19,11 +23,11 @@
 // 1. VCC_BAT = calibrated battery voltage ATmega328p
 MAX471 myMax471(ADC_10_bit , VCC_BAT, AT_PIN, VT_PIN);
 
-// LCD 
+// LCD
 #define LCDcontrast 0x30 // 0x49 default, Lower contrast works better on Blue LCD 
-#define mylcdheight 64
-#define mylcdwidth  192
-// GPIO 5-wire SPI interface HW SPI 
+#define MYLCDHEIGHT 64
+#define MYLCDWIDTH  192
+// GPIO 5-wire SPI interface HW SPI
 #define CD 10 // GPIO pin number pick any you want 
 #define RST 9 // "
 #define CS 8  // "
@@ -31,9 +35,9 @@ MAX471 myMax471(ADC_10_bit , VCC_BAT, AT_PIN, VT_PIN);
 // GPIO pin number SDA(UNO 11) , HW SPI , MOSI
 
 // define a buffer to cover one third screen , We divide the screen into 3 buffers, re-use buffer
-uint8_t  screenBuffer[(mylcdwidth * (mylcdheight / 8)) / 3]; // 512 bytes
+uint8_t  screenBuffer[(MYLCDWIDTH * (MYLCDHEIGHT / 8)) / 3]; // 512 bytes
 
-ERM19264_UC1609  mylcd(CD, RST, CS); // instantiate LCD object 
+ERM19264_UC1609  mylcd(CD, RST, CS); // instantiate LCD object
 
 // Serial, optionally comment in for serial
 #define SERIAL_DEBUG_ON
@@ -79,9 +83,8 @@ void Display_Buffer_Left(void)
 
   // Declare a buffer struct and intialise.
   MultiBuffer left_side;
-  left_side.screenbitmap = (uint8_t*) &screenBuffer;
-  left_side.width = mylcdwidth / 3 ; // 64
-  left_side.height = mylcdheight;
+  // Intialise that struct (&struct, buffer, w, h, x_offset, y-offset)
+  mylcd.LCDinitBufferStruct(&left_side, screenBuffer, MYLCDWIDTH / 3, MYLCDHEIGHT, 0, 0);
 
   // Set the Active buffer to Struct.
   mylcd.ActiveBuffer = &left_side;
@@ -92,7 +95,7 @@ void Display_Buffer_Left(void)
 
   //  Print Text legend for meter
   mylcd.setTextColor(FOREGROUND);
-  mylcd.setFontNum(2); // Thick Font
+  mylcd.setFontNum(UC1609Font_Thick); // Thick Font
   mylcd.setCursor(5, 10);
   mylcd.print(F("VOLTAGE"));
   mylcd.setCursor(5, 30);
@@ -116,16 +119,14 @@ void Display_Buffer_Middle(void)
   power = voltageReading * currentReading;
 
   // Declare a buffer struct and intialise.
-  MultiBuffer middle_side;
-  middle_side.screenbitmap = (uint8_t*) &screenBuffer;
-  middle_side.width = mylcdwidth / 3 ; // 64
-  middle_side.height = mylcdheight;
-  middle_side.xoffset = mylcdwidth/3; 
-
+  MultiBuffer middle_side;  // Declare a multi buffer struct for left side of screen
+  // Intialise that struct (&struct, buffer, w, h, x_offset, y-offset)
+  mylcd.LCDinitBufferStruct(&middle_side, screenBuffer, MYLCDWIDTH / 3, MYLCDHEIGHT, MYLCDWIDTH / 3, 0);
+  
   // Set the Active buffer to Struct.
   mylcd.ActiveBuffer = &middle_side;
   mylcd.LCDclearBuffer();
-  
+
   // Draw a rectangle around buffer
   Draw_Shapes();
 
@@ -133,7 +134,7 @@ void Display_Buffer_Middle(void)
   Numbers_Font(4);
   mylcd.print(voltageReading, 2);
   Legend_Font(10);
-  mylcd.print(F("V")); 
+  mylcd.print(F("V"));
 
   Numbers_Font(26);
   mylcd.print(currentReading, 2);
@@ -144,11 +145,11 @@ void Display_Buffer_Middle(void)
   mylcd.print(power, 2);
   Legend_Font(52);
   mylcd.print(F("W"));
-  
+
   mylcd.LCDupdate();
 
   Display_Buffer_Right(voltageReading, currentReading, power);
-  
+
 #ifdef SERIAL_DEBUG_ON
   Serial.print("Voltage Volts:  ");
   Serial.println(voltageReading, 4);
@@ -164,37 +165,39 @@ void Display_Buffer_Middle(void)
 
 // Function to display RHS of screen (Screen is divided three parts/buffers)
 // The RHS will contain measurements in mV , mA and mW
-void Display_Buffer_Right(float voltage, float current ,float power)
+void Display_Buffer_Right(float voltage, float current , float power)
 {
 
   MultiBuffer right_side;
-  right_side.screenbitmap = (uint8_t*) &screenBuffer;
-  right_side.width = mylcdwidth/3 ;
-  right_side.height = mylcdheight; 
-  right_side.xoffset = (mylcdwidth/3)*2; // 128 2/3 screen width
+  mylcd.LCDinitBufferStruct(&right_side, screenBuffer, MYLCDWIDTH/3, MYLCDHEIGHT, (MYLCDWIDTH/3)*2, 0);
 
   mylcd.ActiveBuffer = &right_side;
   mylcd.LCDclearBuffer();
-  
+
   // Draw a rectangle and lines around buffer
   Draw_Shapes();
 
   //  Print  for meter readings for mV mA and mW
   mylcd.setCursor(5, 10);
-  mylcd.print(voltage*1000,0);
+  mylcd.print(voltage * 1000, 0);
+  mylcd.setCursor(44, 10);
   mylcd.print(F(" mV"));
+ 
   mylcd.setCursor(5, 30);
-  mylcd.print(current*1000, 1);
+  mylcd.print(current * 1000, 1);
+  mylcd.setCursor(44, 30);
   mylcd.print(F(" mA"));
-  mylcd.setCursor(5, 50);
-  mylcd.print(power*1000,0);
-  mylcd.print(F(" mW"));
   
+  mylcd.setCursor(5, 50);
+  mylcd.print(power * 1000, 0);
+  mylcd.setCursor(44, 50);
+  mylcd.print(F(" mW"));
+
   mylcd.LCDupdate();
 
 }
 
-void Draw_Shapes(void){
+void Draw_Shapes(void) {
   mylcd.drawRect(0, 0, 64, 64, FOREGROUND);
   mylcd.drawFastHLine(0, 21, 63, FOREGROUND);
   mylcd.drawFastHLine(0, 42, 63, FOREGROUND);
@@ -203,14 +206,14 @@ void Draw_Shapes(void){
 void Legend_Font(uint8_t y_offset)
 {
   mylcd.setCursor(56, y_offset);
-  mylcd.setFontNum(1);
+  mylcd.setFontNum(UC1609Font_Default );
   mylcd.setTextSize(1);
 }
 
 void Numbers_Font(int8_t y_offset)
 {
   mylcd.setCursor(4, y_offset);
-  mylcd.setFontNum(3);
+  mylcd.setFontNum(UC1609Font_Seven_Seg);
   mylcd.setTextSize(2);
 }
 
