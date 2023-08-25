@@ -20,8 +20,9 @@
 #define VT_PIN A0
 #define AT_PIN A1
 #define TEST_DELAY delay(2000);
+#define R0_V0_VALUE 5 // Resistor divider network on RS, Vo * value 
 // 1. VCC_BAT = calibrated battery voltage ATmega328p
-MAX471 myMax471(ADC_10_bit , VCC_BAT, AT_PIN, VT_PIN);
+MAX471 myMax471(ADC_10_bit , VCC_BAT, AT_PIN, VT_PIN, R0_V0_VALUE);
 
 // LCD
 #define LCDcontrast 0x30 // 0x49 default, Lower contrast works better on Blue LCD 
@@ -81,12 +82,7 @@ void loop() {
 void Display_Buffer_Left(void)
 {
 
-  // Declare a buffer struct and intialise.
-  MultiBuffer left_side;
-  // Intialise that struct (&struct, buffer, w, h, x_offset, y-offset)
-  mylcd.LCDinitBufferStruct(&left_side, screenBuffer, MYLCDWIDTH / 3, MYLCDHEIGHT, 0, 0);
-
-  // Set the Active buffer to Struct.
+  ERM19264_UC1609_Screen left_side(screenBuffer, MYLCDWIDTH/3, MYLCDHEIGHT, 0, 0);
   mylcd.ActiveBuffer = &left_side;
   mylcd.LCDclearBuffer();
 
@@ -118,12 +114,7 @@ void Display_Buffer_Middle(void)
   currentReading = myMax471.CurrentRead();
   power = voltageReading * currentReading;
 
-  // Declare a buffer struct and intialise.
-  MultiBuffer middle_side;  // Declare a multi buffer struct for left side of screen
-  // Intialise that struct (&struct, buffer, w, h, x_offset, y-offset)
-  mylcd.LCDinitBufferStruct(&middle_side, screenBuffer, MYLCDWIDTH / 3, MYLCDHEIGHT, MYLCDWIDTH / 3, 0);
-  
-  // Set the Active buffer to Struct.
+  ERM19264_UC1609_Screen middle_side(screenBuffer, MYLCDWIDTH/3 , MYLCDHEIGHT, MYLCDWIDTH / 3, 0);
   mylcd.ActiveBuffer = &middle_side;
   mylcd.LCDclearBuffer();
 
@@ -168,9 +159,7 @@ void Display_Buffer_Middle(void)
 void Display_Buffer_Right(float voltage, float current , float power)
 {
 
-  MultiBuffer right_side;
-  mylcd.LCDinitBufferStruct(&right_side, screenBuffer, MYLCDWIDTH/3, MYLCDHEIGHT, (MYLCDWIDTH/3)*2, 0);
-
+  ERM19264_UC1609_Screen right_side(screenBuffer, MYLCDWIDTH/3, MYLCDHEIGHT, (MYLCDWIDTH/3)*2, 0);
   mylcd.ActiveBuffer = &right_side;
   mylcd.LCDclearBuffer();
 
